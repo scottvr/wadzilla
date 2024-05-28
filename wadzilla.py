@@ -78,12 +78,15 @@ sectors = parse_sectors(sector_data)
 things = parse_things(thing_data)
 
 class Room:
-    def __init__(self, sector_id, sector_data, vertexes):
+    def __init__(self, sector_id, sector_data):
         self.sector_id = sector_id
         self.floor_height, self.ceiling_height, self.floor_tex, self.ceiling_tex, self.light_level, self.type, self.tag = sector_data
-        self.vertexes = vertexes
+        self.vertexes = set()
         self.linedefs = []
         self.things = []
+
+    def add_vertex(self, vertex):
+        self.vertexes.add(vertex)
 
     def add_linedef(self, linedef):
         self.linedefs.append(linedef)
@@ -113,25 +116,32 @@ def point_in_polygon(x, y, polygon):
 # Create rooms from sectors
 rooms = {}
 for i, sector_data in enumerate(sectors):
-    sector_vertexes = [vertexes[idx] for idx in range(len(vertexes))]  # Assuming vertexes are properly indexed
-    rooms[i] = Room(i, sector_data, sector_vertexes)
+    rooms[i] = Room(i, sector_data)
 
-# Add linedefs to rooms
+# Add linedefs to rooms and define their vertexes
 for linedef in linedefs:
     v1, v2, flags, types, tag, right_sidedef, left_sidedef = linedef
     if right_sidedef != -1:
         sector_id = sidedefs[right_sidedef][5]
         rooms[sector_id].add_linedef(linedef)
+        rooms[sector_id].add_vertex(vertexes[v1])
+        rooms[sector_id].add_vertex(vertexes[v2])
     if left_sidedef != -1:
         sector_id = sidedefs[left_sidedef][5]
         rooms[sector_id].add_linedef(linedef)
+        rooms[sector_id].add_vertex(vertexes[v1])
+        rooms[sector_id].add_vertex(vertexes[v2])
+
+# Print vertices for each room to debug
+for room_id, room in rooms.items():
+    print(f"Room {room_id} vertices: {room.vertexes}")
 
 # Determine which room each thing belongs to and add it
 for thing in things:
     x, y, type = thing
     added = False
     for room in rooms.values():
-        if point_in_polygon(x, y, room.vertexes):
+        if point_in_polygon(x, y, list(room.vertexes)):
             room.add_thing(thing)
             added = True
             break
