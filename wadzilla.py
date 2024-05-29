@@ -103,9 +103,9 @@ def scrape_thing_types(url):
     for table in soup.find_all('table', class_='wikitable'):
         for row in table.find_all('tr')[1:]:
             cols = row.find_all('td')
-            if len(cols) >= 9:  # Ensure there are enough columns
-                type_id = cols[0].get_text(strip=True)  # Decimal column
-                description = cols[8].get_text(strip=True)  # Description column
+            if len(cols) >= 9:  
+                type_id = cols[0].get_text(strip=True)  
+                description = cols[8].get_text(strip=True)  
                 if type_id.isdigit():
                     thing_dict[int(type_id)] = description
 
@@ -118,7 +118,7 @@ class Room:
         self.vertexes = set()
         self.linedefs = []
         self.things = []
-        self.wall_textures = []  # Store wall textures
+        self.wall_textures = []  
 
     def add_vertex(self, vertex):
         self.vertexes.add(vertex)
@@ -189,7 +189,6 @@ class Room:
         return description
 
 def main():
-    # Set up argument parsing
     parser = argparse.ArgumentParser(description='Process WAD files and output room descriptions.')
     parser.add_argument('-basewad', required=True, help='The base WAD file (e.g., doom1.wad)')
     parser.add_argument('-file', required=False, help='The patch WAD file (e.g., some_mod_pwad.wad)')
@@ -219,10 +218,9 @@ def main():
     TEXTURE_DESCRIPTIONS_FILE = os.path.join(DATA_DIR, 'texture_descriptions.json')
     THING_TYPES_FILE = os.path.join(DATA_DIR, 'thing_types.json')
 
-    # Ensure directories exist
     os.makedirs(DATA_DIR, exist_ok=True)
 
-    # Scrape and save texture descriptions if not present
+    # WIP: Scrape and save texture descriptions if not present
     if not os.path.exists(TEXTURE_DESCRIPTIONS_FILE):
         texture_url = 'https://doomwiki.org/wiki/Texture'
         textures = scrape_texture_descriptions(texture_url)
@@ -244,7 +242,6 @@ def main():
     with open(THING_TYPES_FILE, 'r') as f:
         thing_type_descriptions = json.load(f)
 
-    # Convert the keys of thing_type_descriptions to integers
     thing_type_descriptions = {int(k): v for k, v in thing_type_descriptions.items()}
 
     vertex_data = wad.read_lump('VERTEXES')
