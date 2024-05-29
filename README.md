@@ -8,7 +8,7 @@ A wiki page explaining the motivation and some history of Zork and Doom is in th
 
 ## Overview
 
-Wadzilla extracts information from Doom WAD files, including map geometry, texture descriptions and thing types, and utilizes it to generate ZIL code that describes the rooms and objects in ZIL format, so that the map can be explored within the Zork runtime environment.
+Wadzilla extracts information from Doom WAD files, including map geometry, texture descriptions and thing types, and utilizes it to generate text that describes the rooms and objects in ZIL code format, so that the map can be explored within the Zork runtime environment.
 
 ## Usage
 
