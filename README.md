@@ -23,11 +23,12 @@ See the output from --help for more usage info.
 - Python 3.x
 - Requests
 - BeautifulSoup
-- an IWAD file, such as doom1.wad from id Software
+- an IWAD file, such as doom1.wad from id Software. the Doom shareware WAD is freely distributable per John Carmack, and it is also readily available all over the Internet, so I won't waste bits by including it here. archive.org will have it, as well as many other places. 
 
 # Optionally
 - a patch level (mod/PWAD file)
 
+# Aditionally
 Descriptions for Things found in the wad will either be just the item number (not very descriptive) or the string from the file data/thing_types.json, which contains a dict mapping the item id (decimal) to a string. By default if the file does not exist, the script will attempt to create a dict populated with data it finds in the Doom Wiki (https://doomwiki.org/wiki/Thing_types_by_number) table.
 
 You can edit this file for your needs, or even create it manually. Also, if you want to have the script scrape a table you know exists in the aforementioned Doom Wiki doc, you can alter the function to search for the table header like so:
@@ -58,5 +59,5 @@ def scrape_thing_types(url):
 
 Just as I finished writing this section I realized I should probably just add a variable to contain the section header name (string to match) and perhaps even allow it passed as a command-line option argument. TBD.
 
-## LICENSE
-um, MIT I guess. I'll put something proper here before anyone learns of Wadzilla's existence. 
+## LICENSES
+wadzilla is um, MIT licensed I guess. I'll put something proper here before anyone learns of Wadzilla's existence. 
