@@ -11,5 +11,7 @@ Wadzilla extracts information from Doom WAD files, including texture description
 To use Wadzilla, execute the following command:
 
 ```bash
-python wadzilla.py -basewad /path/to/doom1.wad -file /path/to/some_mod_pwad.wad -output /path/to/output.zil -debug
+python wadzilla.py -basewad /path/to/doom1.wad 
 ```
+
+Mods (PWADs) can also be specified. the argument syntax for specifying IWAD and PWAD are based on the Doom game's ( command-line options in homage; apologies for their sorta non-intuitive (to me) option names. See the output from --help for more usage info. 
