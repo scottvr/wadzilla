@@ -1,6 +1,8 @@
 # Wadzilla
 
-Wadzilla is a tool designed to facilitate the conversion of Doom WAD files into ZIL files, suitable for creating interactive fiction in the style of Infocom games. Quite possibly it was actually designed to facilitate the long-standing "Doom on Everything" initiative.  I am aware that it is a ludicrous tool. 
+Wadzilla is a tool designed to facilitate the conversion of Doom WAD files into ZIL files, suitable for creating interactive fiction in the style of Infocom games. 
+
+Quite possibly it was actually designed to facilitate the long-standing "Doom on Everything" initiative.  I am aware that it is a ludicrous tool. 
 
 ## Overview
 
