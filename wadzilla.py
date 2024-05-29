@@ -1,4 +1,10 @@
+import os
+import sys
+import json
+import requests
+from bs4 import BeautifulSoup
 import struct
+import argparse
 
 class WADFile:
     def __init__(self, filename):
@@ -62,53 +68,6 @@ def parse_things(data):
         things.append((x, y, type))
     return things
 
-THING_TYPE_DESCRIPTIONS = {
-    1: "Player 1 Start",
-    2: "Player 2 Start",
-    3: "Player 3 Start",
-    4: "Player 4 Start",
-    11: "Deathmatch Start",
-    2001: "Shotgun",
-    2002: "Chaingun",
-    2003: "Rocket Launcher",
-    2004: "Plasma Gun",
-    2005: "BFG9000",
-    2006: "Chainsaw",
-    2045: "Berserk Pack",
-    2046: "Partial Invisibility",
-    2047: "Computer Area Map",
-    2048: "Light Amplification Visor",
-    2049: "Megasphere",
-    #  and so on ...
-}
-
-class Room:
-    def __init__(self, sector_id, sector_data):
-        self.sector_id = sector_id
-        self.floor_height, self.ceiling_height, self.floor_tex, self.ceiling_tex, self.light_level, self.type, self.tag = sector_data
-        self.vertexes = set()
-        self.linedefs = []
-        self.things = []
-
-    def add_vertex(self, vertex):
-        self.vertexes.add(vertex)
-
-    def add_linedef(self, linedef):
-        self.linedefs.append(linedef)
-
-    def add_thing(self, thing):
-        self.things.append(thing)
-
-    def describe_zil(self):
-        description = f"<ROOM {self.sector_id} {self.floor_tex}/{self.ceiling_tex}>\n"
-        description += f"FLOOR HEIGHT: {self.floor_height}, CEILING HEIGHT: {self.ceiling_height}\n"
-        description += "Things:\n"
-        for thing in self.things:
-            x, y, type = thing
-            thing_desc = THING_TYPE_DESCRIPTIONS.get(type, f"Unknown type {type}")
-            description += f" - {thing_desc} at ({x}, {y})\n"
-        return description
-
 def point_in_polygon(x, y, polygon):
     num = len(polygon)
     j = num - 1
@@ -120,57 +79,204 @@ def point_in_polygon(x, y, polygon):
         j = i
     return c
 
-# Example usage:
-wad = WADFile('doom1.wad')
-vertex_data = wad.read_lump('VERTEXES')
-linedef_data = wad.read_lump('LINEDEFS')
-sidedef_data = wad.read_lump('SIDEDEFS')
-sector_data = wad.read_lump('SECTORS')
-thing_data = wad.read_lump('THINGS')
+def scrape_texture_descriptions(url):
+# stub until I arrive at a way to describe the textures. The script will just use the texture names for now.
+#    response = requests.get(url)
+#    soup = BeautifulSoup(response.text, 'html.parser')
 
-# Parsing data
-vertexes = parse_vertexes(vertex_data)
-linedefs = parse_linedefs(linedef_data)
-sidedefs = parse_sidedefs(sidedef_data)
-sectors = parse_sectors(sector_data)
-things = parse_things(thing_data)
+    texture_dict = {}
+#    for table in soup.find_all('table', class_='wikitable'):
+#        for row in table.find_all('tr')[1:]:
+#            cols = row.find_all('td')
+#            if len(cols) >= 2:
+#                texture_name = cols[0].get_text(strip=True)
+#                description = cols[1].get_text(strip=True)
+#                texture_dict[texture_name] = description
 
-# Create rooms from sectors
-rooms = {}
-for i, sector_data in enumerate(sectors):
-    rooms[i] = Room(i, sector_data)
+    return texture_dict
 
-# Add linedefs to rooms and define their vertexes
-for linedef in linedefs:
-    v1, v2, flags, types, tag, right_sidedef, left_sidedef = linedef
-    if right_sidedef != -1:
-        sector_id = sidedefs[right_sidedef][5]
-        rooms[sector_id].add_linedef(linedef)
-        rooms[sector_id].add_vertex(vertexes[v1])
-        rooms[sector_id].add_vertex(vertexes[v2])
-    if left_sidedef != -1:
-        sector_id = sidedefs[left_sidedef][5]
-        rooms[sector_id].add_linedef(linedef)
-        rooms[sector_id].add_vertex(vertexes[v1])
-        rooms[sector_id].add_vertex(vertexes[v2])
+def scrape_thing_types(url):
+    response = requests.get(url)
+    soup = BeautifulSoup(response.text, 'html.parser')
 
-# Print vertices for each room to debug
-for room_id, room in rooms.items():
-    print(f"Room {room_id} vertices: {room.vertexes}")
+    thing_dict = {}
+    for table in soup.find_all('table', class_='wikitable'):
+        for row in table.find_all('tr')[1:]:
+            cols = row.find_all('td')
+            if len(cols) >= 9:  # Ensure there are enough columns
+                type_id = cols[0].get_text(strip=True)  # Decimal column
+                description = cols[8].get_text(strip=True)  # Description column
+                if type_id.isdigit():
+                    thing_dict[int(type_id)] = description
 
-# Determine which room each thing belongs to and add it
-for thing in things:
-    x, y, type = thing
-    added = False
-    for room in rooms.values():
-        if point_in_polygon(x, y, list(room.vertexes)):
-            room.add_thing(thing)
-            added = True
-            break
-    if not added:
-        print(f"Thing at ({x}, {y}) of type {type} not added to any room.")
+    return thing_dict
 
-# Output ZIL descriptions
-for room in rooms.values():
-    print(room.describe_zil())
+class Room:
+    def __init__(self, sector_id, sector_data):
+        self.sector_id = sector_id
+        self.floor_height, self.ceiling_height, self.floor_tex, self.ceiling_tex, self.light_level, self.type, self.tag = sector_data
+        self.vertexes = set()
+        self.linedefs = []
+        self.things = []
+        self.wall_textures = []  # Store wall textures
+
+    def add_vertex(self, vertex):
+        self.vertexes.add(vertex)
+
+    def add_linedef(self, linedef, sidedefs):
+        self.linedefs.append(linedef)
+        v1, v2, flags, types, tag, right_sidedef, left_sidedef = linedef
+        
+        right_sidedef_data = sidedefs[right_sidedef]
+        left_sidedef_data = sidedefs[left_sidedef] if left_sidedef != -1 else None
+        
+        self.wall_textures.append({
+            'right_upper': right_sidedef_data[2],
+            'right_lower': right_sidedef_data[3],
+            'right_middle': right_sidedef_data[4],
+            'left_upper': left_sidedef_data[2] if left_sidedef_data else None,
+            'left_lower': left_sidedef_data[3] if left_sidedef_data else None,
+            'left_middle': left_sidedef_data[4] if left_sidedef_data else None
+        })
+
+    def add_thing(self, thing):
+        self.things.append(thing)
+
+    def describe_zil(self, texture_descriptions, thing_type_descriptions):
+        description = f"<ROOM {self.sector_id} {self.floor_tex}/{self.ceiling_tex}>\n"
+        description += f"FLOOR HEIGHT: {self.floor_height}, CEILING HEIGHT: {self.ceiling_height}\n"
+
+        floor_desc = texture_descriptions.get(self.floor_tex, f"Unknown texture {self.floor_tex}")
+        ceiling_desc = texture_descriptions.get(self.ceiling_tex, f"Unknown texture {self.ceiling_tex}")
+        description += f"Floor: {floor_desc}\nCeiling: {ceiling_desc}\n"
+
+        description += "Walls:\n"
+        for wall in self.wall_textures:
+            description += f" - Right Upper: {wall['right_upper']}, Right Lower: {wall['right_lower']}, Right Middle: {wall['right_middle']}\n"
+            if wall['left_upper']:
+                description += f" - Left Upper: {wall['left_upper']}, Left Lower: {wall['left_lower']}, Left Middle: {wall['left_middle']}\n"
+
+        description += "Things:\n"
+        for thing in self.things:
+            x, y, type = thing
+            thing_desc = thing_type_descriptions.get(type, f"Unknown type {type}")
+            description += f" - {thing_desc} at ({x}, {y})\n"
+        return description
+
+
+def main():
+    # Set up argument parsing
+    parser = argparse.ArgumentParser(description='Process WAD files and output room descriptions.')
+    parser.add_argument('-basewad', required=True, help='The base WAD file (e.g., doom1.wad)')
+    parser.add_argument('-file', required=False, help='The patch WAD file (e.g., some_mod_pwad.wad)')
+    parser.add_argument('-output', required=False, help='The output file for ZIL code', default='output.zil')
+    parser.add_argument('-debug', action='store_true', help='Enable debug logging')
+    args = parser.parse_args()
+
+    def debug_log(message):
+        if args.debug:
+            print(message, file=sys.stderr)
+
+    if not os.path.exists(args.basewad):
+        print(f"Base WAD file '{args.basewad}' not found.")
+        sys.exit(1)
+
+    wad = WADFile(args.basewad)
+
+    if args.file:
+        if not os.path.exists(args.file):
+            print(f"Patch WAD file '{args.file}' not found.")
+            sys.exit(1)
+        patch_wad = WADFile(args.file)
+        wad = wad.merge(patch_wad)
+
+    # Define paths
+    DATA_DIR = 'data'
+    TEXTURE_DESCRIPTIONS_FILE = os.path.join(DATA_DIR, 'texture_descriptions.json')
+    THING_TYPES_FILE = os.path.join(DATA_DIR, 'thing_types.json')
+
+    # Ensure directories exist
+    os.makedirs(DATA_DIR, exist_ok=True)
+
+    # Scrape and save texture descriptions if not present
+    if not os.path.exists(TEXTURE_DESCRIPTIONS_FILE):
+        texture_url = 'https://doomwiki.org/wiki/Texture'
+        textures = scrape_texture_descriptions(texture_url)
+        with open(TEXTURE_DESCRIPTIONS_FILE, 'w') as f:
+            json.dump(textures, f, indent=4)
+
+    # Scrape and save thing types if not present
+    if not os.path.exists(THING_TYPES_FILE):
+        thing_url = 'https://doomwiki.org/wiki/Thing_types_by_number'
+        things = scrape_thing_types(thing_url)
+        with open(THING_TYPES_FILE, 'w') as f:
+            json.dump(things, f, indent=4)
+
+    # Load the texture descriptions from the JSON file
+    with open(TEXTURE_DESCRIPTIONS_FILE, 'r') as f:
+        texture_descriptions = json.load(f)
+
+    # Load the thing descriptions from the JSON file
+    with open(THING_TYPES_FILE, 'r') as f:
+        thing_type_descriptions = json.load(f)
+
+    # Convert the keys of thing_type_descriptions to integers
+    thing_type_descriptions = {int(k): v for k, v in thing_type_descriptions.items()}
+
+    vertex_data = wad.read_lump('VERTEXES')
+    linedef_data = wad.read_lump('LINEDEFS')
+    sidedef_data = wad.read_lump('SIDEDEFS')
+    sector_data = wad.read_lump('SECTORS')
+    thing_data = wad.read_lump('THINGS')
+
+    vertexes = parse_vertexes(vertex_data)
+    linedefs = parse_linedefs(linedef_data)
+    sidedefs = parse_sidedefs(sidedef_data)
+    sectors = parse_sectors(sector_data)
+    things = parse_things(thing_data)
+
+    rooms = {}
+    for i, sector_data in enumerate(sectors):
+        rooms[i] = Room(i, sector_data)
+
+    for linedef in linedefs:
+        v1, v2, flags, types, tag, right_sidedef, left_sidedef = linedef
+        right_sector_id = sidedefs[right_sidedef][5]
+        rooms[right_sector_id].add_linedef(linedef, sidedefs)
+        rooms[right_sector_id].add_vertex(vertexes[v1])
+        rooms[right_sector_id].add_vertex(vertexes[v2])
+        if left_sidedef != -1:
+            left_sector_id = sidedefs[left_sidedef][5]
+            rooms[left_sector_id].add_linedef(linedef, sidedefs)
+            rooms[left_sector_id].add_vertex(vertexes[v1])
+            rooms[left_sector_id].add_vertex(vertexes[v2])
+
+    if args.debug:
+        for room_id, room in rooms.items():
+            debug_log(f"Room {room_id} vertices: {room.vertexes}")
+
+    for thing in things:
+        x, y, type = thing
+        added = False
+        for room in rooms.values():
+            if point_in_polygon(x, y, list(room.vertexes)):
+                room.add_thing(thing)
+                added = True
+                break
+        if not added:
+            if args.debug:
+                debug_log(f"Thing at ({x}, {y}) of type {type} not added to any room.")
+
+    with open(args.output, 'w') as f:
+        for room in rooms.values():
+            zil_description = room.describe_zil(texture_descriptions, thing_type_descriptions)
+            if args.debug:
+                debug_log(zil_description)
+            f.write(zil_description)
+            f.write('\n')
+
+    debug_log(f"ZIL descriptions written to {args.output}")
+
+if __name__ == "__main__":
+    main()
 
