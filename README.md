@@ -4,6 +4,8 @@ Wadzilla is a tool designed to facilitate the conversion of Doom WAD files into 
 
 Quite possibly it was actually designed to facilitate the long-standing "Doom on Everything" initiative.  I am aware that it is a ludicrous tool. 
 
+A wiki page explaining the motivation is in the works here: https://github.com/scottvr/wadzilla/wiki
+
 ## Overview
 
 Wadzilla extracts information from Doom WAD files, including texture descriptions and thing types, and utilizes it to generate ZIL code that describes the rooms and objects within the game environment.
