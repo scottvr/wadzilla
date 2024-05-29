@@ -131,12 +131,16 @@ class Room:
         left_sidedef_data = sidedefs[left_sidedef] if left_sidedef != -1 else None
         
         self.wall_textures.append({
-            'right_upper': right_sidedef_data[2],
-            'right_lower': right_sidedef_data[3],
-            'right_middle': right_sidedef_data[4],
-            'left_upper': left_sidedef_data[2] if left_sidedef_data else None,
-            'left_lower': left_sidedef_data[3] if left_sidedef_data else None,
-            'left_middle': left_sidedef_data[4] if left_sidedef_data else None
+            'right': {
+                'upper': right_sidedef_data[2] if right_sidedef_data[2] != '-' else None,
+                'lower': right_sidedef_data[3] if right_sidedef_data[3] != '-' else None,
+                'middle': right_sidedef_data[4] if right_sidedef_data[4] != '-' else None
+            },
+            'left': {
+                'upper': left_sidedef_data[2] if left_sidedef_data and left_sidedef_data[2] != '-' else None,
+                'lower': left_sidedef_data[3] if left_sidedef_data and left_sidedef_data[3] != '-' else None,
+                'middle': left_sidedef_data[4] if left_sidedef_data and left_sidedef_data[4] != '-' else None
+            }
         })
 
     def add_thing(self, thing):
@@ -152,9 +156,30 @@ class Room:
 
         description += "Walls:\n"
         for wall in self.wall_textures:
-            description += f" - Right Upper: {wall['right_upper']}, Right Lower: {wall['right_lower']}, Right Middle: {wall['right_middle']}\n"
-            if wall['left_upper']:
-                description += f" - Left Upper: {wall['left_upper']}, Left Lower: {wall['left_lower']}, Left Middle: {wall['left_middle']}\n"
+            description += " - "
+            if wall['right']['upper']:
+                description += f"Right: {wall['right']['upper']}"
+                if wall['right']['middle'] or wall['right']['lower']:
+                    description += ', '
+            if wall['right']['middle']:
+                description += f"{wall['right']['middle']}"
+                if wall['right']['lower']:
+                    description += ', '
+            if wall['right']['lower']:
+                description += f"{wall['right']['lower']}"
+            if wall['left']['upper'] or wall['left']['middle'] or wall['left']['lower']:
+                description += ', Left: '
+                if wall['left']['upper']:
+                    description += f"{wall['left']['upper']}"
+                    if wall['left']['middle'] or wall['left']['lower']:
+                        description += ', '
+                if wall['left']['middle']:
+                    description += f"{wall['left']['middle']}"
+                    if wall['left']['lower']:
+                        description += ', '
+                if wall['left']['lower']:
+                    description += f"{wall['left']['lower']}"
+            description += '\n'
 
         description += "Things:\n"
         for thing in self.things:
@@ -162,7 +187,6 @@ class Room:
             thing_desc = thing_type_descriptions.get(type, f"Unknown type {type}")
             description += f" - {thing_desc} at ({x}, {y})\n"
         return description
-
 
 def main():
     # Set up argument parsing
