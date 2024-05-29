@@ -42,7 +42,7 @@ if you are after the ultimate goal of *playing Doom inside of Zork* you will nee
 # Aditionally
 Descriptions for Things found in the wad will either be just the item number (not very descriptive) or the string from the file data/thing_types.json, which contains a dict mapping the item id (decimal) to a string. By default if the file does not exist, the script will attempt to create a dict populated with data it finds in the Doom Wiki (https://doomwiki.org/wiki/Thing_types_by_number) table.
 
-You can edit this file for your needs, or even create it manually. Also, if you want to have the script scrape a table you know exists in the aforementioned Doom Wiki doc, you can alter the function to search for the table header like so:
+You can edit this file for your needs, or even create it manually. (Oh yeah, because Wadzilla should work with Doom 2, Hexen, etc WADs equally.)  Also, if you want to have the script scrape a table you know exists in the aforementioned Doom Wiki doc, you can alter the function to search for the table header like so:
 
 ``` python
 # Using the wikitable on that page for the Things in the Doom-engine game "Strife"
