@@ -29,6 +29,13 @@ See the output from --help for more usage info.
 
 # Optionally
 - a patch level (mod/PWAD file)
+- If you actually want to PLAY your Doom IF, you will need to compile it and run it on a z-machine.
+
+A video explaining this can be found here: https://m.youtube.com/watch?v=JpaBCb6qCCo
+
+A website linking to many tools that can be used in the process is here: https://eblong.com/infocom/
+
+if you are after the ultimate goal of *playing Doom inside of Zork* you will need the decompiled Zork ZIL to which you can use Wadzilla to add a portal into E1M1 in a specified Zork room. See the usage info for how. Tehn of course, the aforementioned compilation and execution on a z-machine is needed.
 
 # Aditionally
 Descriptions for Things found in the wad will either be just the item number (not very descriptive) or the string from the file data/thing_types.json, which contains a dict mapping the item id (decimal) to a string. By default if the file does not exist, the script will attempt to create a dict populated with data it finds in the Doom Wiki (https://doomwiki.org/wiki/Thing_types_by_number) table.
