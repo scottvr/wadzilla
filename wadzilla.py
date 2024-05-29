@@ -198,11 +198,11 @@ def main():
     parser.add_argument('-basewad', required=True, help='The base WAD file (e.g., doom1.wad)')
     parser.add_argument('-file', required=False, help='The patch WAD file (e.g., some_mod_pwad.wad)')
     parser.add_argument('-output', required=False, help='The output file for ZIL code', default='output.zil')
-    parser.add_argument('-debug', action='store_true', help='Enable debug logging')
+    parser.add_argument('-v', '--verbose', action='store_true', help='Enable debug logging')
     args = parser.parse_args()
 
     def debug_log(message):
-        if args.debug:
+        if args.verbose:
             print(message, file=sys.stderr)
 
     if not os.path.exists(args.basewad):
@@ -277,7 +277,7 @@ def main():
             rooms[left_sector_id].add_vertex(vertexes[v1])
             rooms[left_sector_id].add_vertex(vertexes[v2])
 
-    if args.debug:
+    if args.verbose:
         for room_id, room in rooms.items():
             debug_log(f"Room {room_id} vertices: {room.vertexes}")
 
@@ -290,13 +290,13 @@ def main():
                 added = True
                 break
         if not added:
-            if args.debug:
+            if args.verbose:
                 debug_log(f"Thing at ({x}, {y}) of type {type} not added to any room.")
 
     with open(args.output, 'w') as f:
         for room in rooms.values():
             zil_description = room.describe_zil(texture_descriptions, thing_type_descriptions)
-            if args.debug:
+            if args.verbose:
                 debug_log(zil_description)
             f.write(zil_description)
             f.write('\n')
