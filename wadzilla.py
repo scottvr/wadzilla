@@ -100,14 +100,19 @@ def scrape_thing_types(url):
     soup = BeautifulSoup(response.text, 'html.parser')
 
     thing_dict = {}
-    for table in soup.find_all('table', class_='wikitable'):
-        for row in table.find_all('tr')[1:]:
-            cols = row.find_all('td')
-            if len(cols) >= 9:  
-                type_id = cols[0].get_text(strip=True)  
-                description = cols[8].get_text(strip=True)  
-                if type_id.isdigit():
-                    thing_dict[int(type_id)] = description
+    tables = soup.find_all('table', class_='wikitable')
+
+    for table in tables:
+        # Check if the table header matches the one for "Doom, Doom II, Final Doom"
+        header = table.find_previous('h2')
+        if header and 'Doom, Doom II, Final Doom' in header.get_text():
+            for row in table.find_all('tr')[1:]:  # Skip the header row
+                cols = row.find_all('td')
+                if len(cols) >= 9:  
+                    type_id = cols[0].get_text(strip=True)
+                    description = cols[8].get_text(strip=True)
+                    if type_id.isdigit():
+                        thing_dict[int(type_id)] = description
 
     return thing_dict
 
