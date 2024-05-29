@@ -62,20 +62,25 @@ def parse_things(data):
         things.append((x, y, type))
     return things
 
-# Example usage:
-wad = WADFile('doom1.wad')
-vertex_data = wad.read_lump('VERTEXES')
-linedef_data = wad.read_lump('LINEDEFS')
-sidedef_data = wad.read_lump('SIDEDEFS')
-sector_data = wad.read_lump('SECTORS')
-thing_data = wad.read_lump('THINGS')
-
-# Parsing data
-vertexes = parse_vertexes(vertex_data)
-linedefs = parse_linedefs(linedef_data)
-sidedefs = parse_sidedefs(sidedef_data)
-sectors = parse_sectors(sector_data)
-things = parse_things(thing_data)
+THING_TYPE_DESCRIPTIONS = {
+    1: "Player 1 Start",
+    2: "Player 2 Start",
+    3: "Player 3 Start",
+    4: "Player 4 Start",
+    11: "Deathmatch Start",
+    2001: "Shotgun",
+    2002: "Chaingun",
+    2003: "Rocket Launcher",
+    2004: "Plasma Gun",
+    2005: "BFG9000",
+    2006: "Chainsaw",
+    2045: "Berserk Pack",
+    2046: "Partial Invisibility",
+    2047: "Computer Area Map",
+    2048: "Light Amplification Visor",
+    2049: "Megasphere",
+    #  and so on ...
+}
 
 class Room:
     def __init__(self, sector_id, sector_data):
@@ -99,7 +104,9 @@ class Room:
         description += f"FLOOR HEIGHT: {self.floor_height}, CEILING HEIGHT: {self.ceiling_height}\n"
         description += "Things:\n"
         for thing in self.things:
-            description += f" - Thing type {thing[2]} at ({thing[0]}, {thing[1]})\n"
+            x, y, type = thing
+            thing_desc = THING_TYPE_DESCRIPTIONS.get(type, f"Unknown type {type}")
+            description += f" - {thing_desc} at ({x}, {y})\n"
         return description
 
 def point_in_polygon(x, y, polygon):
@@ -112,6 +119,21 @@ def point_in_polygon(x, y, polygon):
             c = not c
         j = i
     return c
+
+# Example usage:
+wad = WADFile('doom1.wad')
+vertex_data = wad.read_lump('VERTEXES')
+linedef_data = wad.read_lump('LINEDEFS')
+sidedef_data = wad.read_lump('SIDEDEFS')
+sector_data = wad.read_lump('SECTORS')
+thing_data = wad.read_lump('THINGS')
+
+# Parsing data
+vertexes = parse_vertexes(vertex_data)
+linedefs = parse_linedefs(linedef_data)
+sidedefs = parse_sidedefs(sidedef_data)
+sectors = parse_sectors(sector_data)
+things = parse_things(thing_data)
 
 # Create rooms from sectors
 rooms = {}
