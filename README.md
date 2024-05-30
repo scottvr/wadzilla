@@ -20,7 +20,9 @@ python wadzilla.py -basewad /path/to/doom1.wad
 
 Mods (PWADs) can also be specified. the argument syntax for specifying IWAD and PWAD is based on the Doom game's command-line options in homage; apologies for their sorta non-intuitive (to me) option names but... y'know, tribute. 
 
-See the output from --help for more usage info. note that the tool is still in embryonoc stage amd under active development. Of its committed to main, then it should be functional, just note that it may change minute to minute for as long as I still have interest in working on it.  after larger milestone changes, I am tagging releases though so you can always use of those commits for stable reproducable resukts across different machines and whatnot.  
+See the output from --help for more usage info. 
+
+Note that Wadzilla is still in embryonoc stage amd under active development. Of its committed to main, then it should be functional, just note that it may change minute to minute for as long as I still have interest in working on it.  after larger milestone changes, I am tagging releases though so you can always use of those commits for stable reproducable resukts across different machines and whatnot.  
 
 ## Dependencies
 
