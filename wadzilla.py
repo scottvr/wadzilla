@@ -6,6 +6,8 @@ from bs4 import BeautifulSoup
 import struct
 import argparse
 
+
+
 class WADFile:
     def __init__(self, filename):
         self.filename = filename
@@ -32,6 +34,20 @@ class WADFile:
                 return f.read(size)
         else:
             raise ValueError(f'Lump {lump_name} not found in WAD.')
+    
+    def adjust_coordinates(self, existing_zil_map):
+        # Calculate offset to align room 0's starting location with existing ZIL map
+        # and adjust coordinates of all rooms accordingly
+
+        portal_room_id = len(existing_zil_map)  
+        portal_coordinates = (x, y)  
+
+        existing_zil_map[portal_room_id] = f"ROOM {portal_room_id}: A mysterious atmosphere fills the room. " \
+                                           f"A glowing green disc appears on the floor."
+
+        self.rooms[0].add_portal(portal_coordinates)
+
+
 
 def parse_vertexes(data):
     vertexes = []
@@ -117,13 +133,24 @@ def scrape_thing_types(url):
     return thing_dict
 
 class Room:
-    def __init__(self, sector_id, sector_data):
+    def __init__(self, sector_id, sector_data, offset=(0, 0)):
+        # Initialize Room instance with optional offset for coordinates
         self.sector_id = sector_id
         self.floor_height, self.ceiling_height, self.floor_tex, self.ceiling_tex, self.light_level, self.type, self.tag = sector_data
         self.vertexes = set()
         self.linedefs = []
         self.things = []
-        self.wall_textures = []  
+        self.wall_textures = []
+        self.offset = offset
+        self.portal_coordinates = None  # Portal entrance coordinates
+
+    def add_vertex(self, vertex):
+        # Add vertex to room, adjusting coordinates based on offset
+        self.vertexes.add((vertex[0] + self.offset[0], vertex[1] + self.offset[1]))
+
+    def add_portal(self, coordinates):
+        # Add portal entrance coordinates to the room
+        self.portal_coordinates = coordinates
 
     def add_vertex(self, vertex):
         self.vertexes.add(vertex)
@@ -193,11 +220,13 @@ class Room:
             description += f" - {thing_desc} at ({x}, {y})\n"
         return description
 
+
 def main():
     parser = argparse.ArgumentParser(description='Process WAD files and output room descriptions.')
-    parser.add_argument('-basewad', required=True, help='The base WAD file (e.g., doom1.wad)')
-    parser.add_argument('-file', required=False, help='The patch WAD file (e.g., some_mod_pwad.wad)')
-    parser.add_argument('-output', required=False, help='The output file for ZIL code', default='output.zil')
+    parser.add_argument('-b', '--basewad', required=True, help='The base WAD file (e.g., doom1.wad)')
+    parser.add_argument('-f', '--file', required=False, help='The patch WAD file (e.g., some_mod_pwad.wad)')
+    parser.add_argument('-z', '--existing_zil_map', required=False, help='The patch WAD file (e.g., some_mod_pwad.wad)')
+    parser.add_argument('-o', '--output', required=False, help='The output file for ZIL code', default='output.zil')
     parser.add_argument('-v', '--verbose', action='store_true', help='Enable debug logging')
     args = parser.parse_args()
 
@@ -217,6 +246,13 @@ def main():
             sys.exit(1)
         patch_wad = WADFile(args.file)
         wad = wad.merge(patch_wad)
+
+    if args.existing_zil_map:
+        existing_zil_map = load_existing_zil_map(args.existing_zil_map)
+        wad.adjust_coordinates(existing_zil_map)
+
+    else:
+        existing_zil_map = {}
 
     # Define paths
     DATA_DIR = 'data'
