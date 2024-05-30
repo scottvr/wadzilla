@@ -22,7 +22,7 @@ Mods (PWADs) can also be specified. the argument syntax for specifying IWAD and 
 
 See the output from --help for more usage info. 
 
-Note that Wadzilla is still in embryonic stage amd under active development. Of its committed to main, then it should be functional, just note that it may change minute to minute for as long as I still have interest in working on it.  after larger milestone changes, I am tagging releases though so you can always use of those commits for stable reproducable resukts across different machines and whatnot.  
+Note that Wadzilla is still in embryonic stage and under active development. If  it is committed to main, then it should be functional, just note that it may change minute to minute for as long as I still have interest in working on it.  after larger milestone changes, I am tagging releases though so you can always use of those commits for stable reproducable resukts across different machines and whatnot.  
 
 ## Dependencies
 
