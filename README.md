@@ -35,7 +35,7 @@ they will be installed simply and with versions known to be compatible with what
 
 - Python 3.x
 - Requests
-- BeautifulSoup
+- BeautifulSoup4
 - an IWAD file, such as doom1.wad from id Software. the Doom shareware WAD is freely distributable per John Carmack, and it is also readily available all over the Internet, so I won't waste bits by including it here. archive.org will have it, as well as many other places. 
 
 ## Optionally
