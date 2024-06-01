@@ -27,6 +27,12 @@ Note that Wadzilla is still in embryonic stage and under active development. If 
 
 ## Dependencies
 
+Hat tip to sachahjkl for motivating me to create a requirements.txt for the Python libs. They are still dependencies, but if you run 
+``` bash
+pip install -r requirements.txt
+```
+they will be installed simply and with versions known to be compatible with what I have used in development.
+
 - Python 3.x
 - Requests
 - BeautifulSoup
