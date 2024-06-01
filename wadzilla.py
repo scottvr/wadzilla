@@ -179,47 +179,46 @@ class Room:
         self.things.append(thing)
 
     def describe_zil(self, texture_descriptions, thing_type_descriptions):
-        description = f"<ROOM {self.sector_id} {self.floor_tex}/{self.ceiling_tex}>\n"
-        description += f"FLOOR HEIGHT: {self.floor_height}, CEILING HEIGHT: {self.ceiling_height}\n"
+        description = f"<ROOM ROOM-{self.sector_id}\n"
+        description += f" (LOC ROOMS)\n"
+        description += f" (DESC \"{self.floor_tex}/{self.ceiling_tex} Room\")\n"
 
-        floor_desc = texture_descriptions.get(self.floor_tex, f"Unknown texture {self.floor_tex}")
-        ceiling_desc = texture_descriptions.get(self.ceiling_tex, f"Unknown texture {self.ceiling_tex}")
-        description += f"Floor: {floor_desc}\nCeiling: {ceiling_desc}\n"
+        if self.portal_coordinates:
+            description += " (PORTAL)\n"
 
-        description += "Walls:\n"
-        for wall in self.wall_textures:
-            description += " - "
-            if wall['right']['upper']:
-                description += f"Right: {wall['right']['upper']}"
-                if wall['right']['middle'] or wall['right']['lower']:
-                    description += ', '
-            if wall['right']['middle']:
-                description += f"{wall['right']['middle']}"
-                if wall['right']['lower']:
-                    description += ', '
-            if wall['right']['lower']:
-                description += f"{wall['right']['lower']}"
-            if wall['left']['upper'] or wall['left']['middle'] or wall['left']['lower']:
-                description += ', Left: '
-                if wall['left']['upper']:
-                    description += f"{wall['left']['upper']}"
-                    if wall['left']['middle'] or wall['left']['lower']:
-                        description += ', '
-                if wall['left']['middle']:
-                    description += f"{wall['left']['middle']}"
-                    if wall['left']['lower']:
-                        description += ', '
-                if wall['left']['lower']:
-                    description += f"{wall['left']['lower']}"
-            description += '\n'
+        floor_desc = texture_descriptions.get(self.floor_tex, self.floor_tex)
+        ceiling_desc = texture_descriptions.get(self.ceiling_tex, self.ceiling_tex)
+        description += f" (FLOOR \"{floor_desc}\")\n"
+        description += f" (CEILING \"{ceiling_desc}\")\n"
 
-        description += "Things:\n"
         for thing in self.things:
             x, y, type = thing
             thing_desc = thing_type_descriptions.get(type, f"Unknown type {type}")
-            description += f" - {thing_desc} at ({x}, {y})\n"
-        return description
+            description += f" (THING \"{thing_desc}\" AT ({x}, {y}))\n"
 
+        for wall in self.wall_textures:
+            if wall['right']['upper'] or wall['right']['middle'] or wall['right']['lower']:
+                description += " (WALL-RIGHT"
+                if wall['right']['upper']:
+                    description += f" UPPER \"{wall['right']['upper']}\""
+                if wall['right']['middle']:
+                    description += f" MIDDLE \"{wall['right']['middle']}\""
+                if wall['right']['lower']:
+                    description += f" LOWER \"{wall['right']['lower']}\""
+                description += ")\n"
+            if wall['left']['upper'] or wall['left']['middle'] or wall['left']['lower']:
+                description += " (WALL-LEFT"
+                if wall['left']['upper']:
+                    description += f" UPPER \"{wall['left']['upper']}\""
+                if wall['left']['middle']:
+                    description += f" MIDDLE \"{wall['left']['middle']}\""
+                if wall['left']['lower']:
+                    description += f" LOWER \"{wall['left']['lower']}\""
+                description += ")\n"
+
+        description += " (FLAGS RLANDBIT)\n"
+        description += ">\n"
+        return description
 
 def main():
     parser = argparse.ArgumentParser(description='Process WAD files and output room descriptions.')
