@@ -1,5 +1,5 @@
 # Wadzilla
-[Current Status and FAQ](https://github.com/scottvr/wadzilla/wiki/Current-status-and-FAQ)
+[Current Status and FAQ](https://github.com/scottvr/wadzilla/wiki/Current-status-and-FAQ) Please see this if you actually intend to use the tool. If you are only here for the amusement of or to show support for the ludicrous idea, you may still like to read it, but it isn't critically relevant before you undertake your endeavor.
 
 Wadzilla is a tool designed to facilitate the conversion of Doom WAD files into ZIL files, suitable for creating interactive fiction in the style of Infocom games. 
 
