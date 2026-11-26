@@ -19,6 +19,14 @@ To use Wadzilla, execute the following command:
 python wadzilla.py --basewad /path/to/doom1.wad 
 ```
 
+Select a map by its directory marker, for example:
+
+```bash
+python wadzilla.py --basewad /path/to/doom1.wad --map E1M1
+```
+
+Map names are case-insensitive and can use either episode names such as E1M1 or numbered names such as MAP01. With a patch WAD, a matching patch map replaces the entire base map. Omitting `--map` selects the last map in the patch WAD if it contains maps, or the last map in the base WAD otherwise.
+
 Mods (PWADs) can also be specified. the argument syntax for specifying IWAD and PWAD is based on the Doom game's command-line options in homage; apologies for their sorta non-intuitive (to me) option names but... y'know, tribute. 
 
 See the output from --help for more usage info. 

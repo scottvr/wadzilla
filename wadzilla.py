@@ -5,36 +5,57 @@ import requests
 from bs4 import BeautifulSoup
 import struct
 import argparse
+import re
 
+
+
+MAP_MARKER = re.compile(r'E[0-9]+M[0-9]+|MAP[0-9]+')
+MAP_LUMPS = {
+    'THINGS', 'LINEDEFS', 'SIDEDEFS', 'VERTEXES', 'SEGS', 'SSECTORS',
+    'NODES', 'SECTORS', 'REJECT', 'BLOCKMAP', 'BEHAVIOR', 'SCRIPTS',
+}
 
 
 class WADFile:
     def __init__(self, filename):
         self.filename = filename
         self.lumps = {}
+        self.maps = {}
+        self.last_map = None
         self.read_wad()
 
     def read_wad(self):
         with open(self.filename, 'rb') as f:
             header = f.read(12)
-            wad_type, num_lumps, dir_offset = struct.unpack('4sII', header)
+            wad_type, num_lumps, dir_offset = struct.unpack('<4sII', header)
             f.seek(dir_offset)
 
+            map_lumps = None
             for _ in range(num_lumps):
                 lump_data = f.read(16)
-                lump_offset, lump_size, lump_name = struct.unpack('II8s', lump_data)
-                lump_name = lump_name.strip(b'\x00').decode('ascii')
-                self.lumps[lump_name] = (lump_offset, lump_size)
+                lump_offset, lump_size, lump_name = struct.unpack('<II8s', lump_data)
+                lump_name = lump_name.strip(b'\x00').decode('ascii').upper()
+                entry = (lump_offset, lump_size)
+                self.lumps[lump_name] = entry
+                if MAP_MARKER.fullmatch(lump_name):
+                    self.last_map = lump_name
+                    map_lumps = {}
+                    self.maps[lump_name] = map_lumps
+                elif map_lumps is not None and lump_name in MAP_LUMPS:
+                    map_lumps[lump_name] = entry
+                else:
+                    map_lumps = None
 
-    def read_lump(self, lump_name):
-        if lump_name in self.lumps:
-            offset, size = self.lumps[lump_name]
-            with open(self.filename, 'rb') as f:
-                f.seek(offset)
-                return f.read(size)
-        else:
-            raise ValueError(f'Lump {lump_name} not found in WAD.')
-    
+    def read_lump(self, lump_name, map_name=None):
+        lumps = self.lumps if map_name is None else self.maps[map_name]
+        if lump_name not in lumps:
+            location = f'map {map_name}' if map_name else 'WAD'
+            raise ValueError(f'Lump {lump_name} not found in {location}.')
+        offset, size = lumps[lump_name]
+        with open(self.filename, 'rb') as f:
+            f.seek(offset)
+            return f.read(size)
+
     def adjust_coordinates(self, existing_zil_map):
         # Calculate offset to align room 0's starting location with existing ZIL map
         # and adjust coordinates of all rooms accordingly
@@ -223,6 +244,8 @@ class Room:
 def main():
     parser = argparse.ArgumentParser(description='Process WAD files and output room descriptions.')
     parser.add_argument('-b', '--basewad', required=True, help='The base WAD file (e.g., doom1.wad)')
+    parser.add_argument('--map', metavar='MAP', type=str.upper,
+                        help='Map to convert (e.g., E1M1 or MAP01). Defaults to the last map.')
     parser.add_argument('-f', '--file', required=False, help='The patch WAD file (e.g., some_mod_pwad.wad)')
     parser.add_argument('-z', '--existing_zil_map', required=False, help='The patch WAD file (e.g., some_mod_pwad.wad)')
     parser.add_argument('-o', '--output', required=False, help='The output file for ZIL code', default='output.zil')
@@ -244,7 +267,13 @@ def main():
             print(f"Patch WAD file '{args.file}' not found.")
             sys.exit(1)
         patch_wad = WADFile(args.file)
-        wad = wad.merge(patch_wad)
+        if (args.map in patch_wad.maps or
+                (args.map is None and patch_wad.last_map is not None)):
+            wad = patch_wad
+
+    map_name = args.map or wad.last_map
+    if map_name is not None and map_name not in wad.maps:
+        parser.error(f'Map {map_name} not found in the supplied WADs.')
 
     if args.existing_zil_map:
         existing_zil_map = load_existing_zil_map(args.existing_zil_map)
@@ -284,11 +313,14 @@ def main():
 
     thing_type_descriptions = {int(k): v for k, v in thing_type_descriptions.items()}
 
-    vertex_data = wad.read_lump('VERTEXES')
-    linedef_data = wad.read_lump('LINEDEFS')
-    sidedef_data = wad.read_lump('SIDEDEFS')
-    sector_data = wad.read_lump('SECTORS')
-    thing_data = wad.read_lump('THINGS')
+    try:
+        vertex_data = wad.read_lump('VERTEXES', map_name)
+        linedef_data = wad.read_lump('LINEDEFS', map_name)
+        sidedef_data = wad.read_lump('SIDEDEFS', map_name)
+        sector_data = wad.read_lump('SECTORS', map_name)
+        thing_data = wad.read_lump('THINGS', map_name)
+    except ValueError as exc:
+        parser.error(str(exc))
 
     vertexes = parse_vertexes(vertex_data)
     linedefs = parse_linedefs(linedef_data)
